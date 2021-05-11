@@ -389,10 +389,7 @@ bool Sid2Song::run() {
 }
 
 
-
-
 int main(int argc, char** argv) {
-
     Sid2Song convert;
     int index = 0;
     for (int i = 1; i < argc; ++i) {
@@ -404,9 +401,7 @@ int main(int argc, char** argv) {
             ++index;
             continue;
         }
-
         std::string s = a;
-
         if      (s == "-nopulse")     convert.m_nopulse     = true;
         else if (s == "-nofilter")    convert.m_nofilter    = true;
         else if (s == "-noinstrvib")  convert.m_noinstrvib  = true;
@@ -415,7 +410,6 @@ int main(int argc, char** argv) {
         else goto USAGE;
     }
     if (index == 0) goto USAGE;
-
     return convert.run() ? 0 : 1;
 
 USAGE:
@@ -426,5 +420,4 @@ USAGE:
                     " -fixedparams\n"
                     " -nowavedelay\n");
     return 1;
-
 }
