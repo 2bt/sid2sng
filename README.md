@@ -11,4 +11,5 @@ For example, it's assumed that all four different tables are present.
 ## TODO
 
 + auto-detect detect missing tables
++ add more options to disable
 + fix bugs

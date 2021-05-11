@@ -32,16 +32,16 @@ uint32_t swap(uint32_t v) { return  __builtin_bswap32(v); }
 
 class Sid2Song {
 public:
-    Sid2Song(const char* sid_filename, const char* sng_filename)
-        : m_sid_filename(sid_filename), m_sng_filename(sng_filename) {}
 
     bool run();
 
-    bool m_nopulse     = false;
-    bool m_nofilter    = false;
-    bool m_noinstrvib  = false;
-    bool m_fixedparams = false;
-    bool m_nowavedelay = false;
+    const char* m_sid_filename = nullptr;
+    const char* m_sng_filename = "out.sng";
+    bool        m_nopulse      = false;
+    bool        m_nofilter     = false;
+    bool        m_noinstrvib   = false;
+    bool        m_fixedparams  = false;
+    bool        m_nowavedelay  = false;
 
 private:
 
@@ -67,8 +67,6 @@ private:
     int                  m_pos;
     int                  m_song_count;
     int                  m_addr_offset;
-    const char*          m_sid_filename;
-    const char*          m_sng_filename;
 };
 
 
@@ -391,17 +389,42 @@ bool Sid2Song::run() {
 }
 
 
+
+
 int main(int argc, char** argv) {
-    if (argc != 2 && argc != 3) {
-        fprintf(stderr, "usage: %s sid-file [sng-file]\n", argv[0]);
-        return 1;
+
+    Sid2Song convert;
+    int index = 0;
+    for (int i = 1; i < argc; ++i) {
+        char const* a = argv[i];
+        if (a[0] != '-') {
+            if      (index == 0) convert.m_sid_filename = a;
+            else if (index == 1) convert.m_sng_filename = a;
+            else if (index >= 2) goto USAGE;
+            ++index;
+            continue;
+        }
+
+        std::string s = a;
+
+        if      (s == "-nopulse")     convert.m_nopulse     = true;
+        else if (s == "-nofilter")    convert.m_nofilter    = true;
+        else if (s == "-noinstrvib")  convert.m_noinstrvib  = true;
+        else if (s == "-fixedparams") convert.m_fixedparams = true;
+        else if (s == "-nowavedelay") convert.m_nowavedelay = true;
+        else goto USAGE;
     }
+    if (index == 0) goto USAGE;
 
-    Sid2Song s(argv[1], argc == 3 ? argv[2] : "out.sng");
+    return convert.run() ? 0 : 1;
 
-    // TODO: disable features via args
-    //s.m_noinstrvib  = true;
-    //s.m_nowavedelay = true;
+USAGE:
+    fprintf(stderr, "usage: %s [options...] sid-file [sng-file]\n", argv[0]);
+    fprintf(stderr, " -nopulse\n"
+                    " -nofilter\n"
+                    " -noinstrvib\n"
+                    " -fixedparams\n"
+                    " -nowavedelay\n");
+    return 1;
 
-    return s.run() ? 0 : 1;
 }
