@@ -8,6 +8,27 @@ It doesn't work for all sid files, especially those that have certain features d
 For example, it's assumed that all four different tables are present.
 
 
+## Usage
+
+    usage: ./build/sid2sng [options...] sid-file [sng-file]
+     -nopulse
+     -nofilter
+     -noinstrvib
+     -fixedparams
+     -nowavedelay
+
+
+## FAQ
+
+### I get an error!
+
+Try supplying some of the options. Good luck!
+
+### Where is the pulse wave?
+
+Try it with `-nowavedelay`.
+
+
 ## TODO
 
 + auto-detect detect missing tables
