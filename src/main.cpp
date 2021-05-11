@@ -32,11 +32,21 @@ uint32_t swap(uint32_t v) { return  __builtin_bswap32(v); }
 
 class Sid2Song {
 public:
+    Sid2Song(const char* sid_filename, const char* sng_filename)
+        : m_sid_filename(sid_filename), m_sng_filename(sng_filename) {}
 
-    bool run(const char* filename);
+    bool run();
 
+    bool m_nopulse     = false;
+    bool m_nofilter    = false;
+    bool m_noinstrvib  = false;
+    bool m_fixedparams = false;
+    bool m_nowavedelay = false;
 
 private:
+
+    bool load_sid();
+
     uint8_t peek() {
         if (m_pos >= (int) m_data.size()) {
             printf("ERROR: peek\n");
@@ -55,23 +65,15 @@ private:
     gt::Song             m_song = {};
     std::vector<uint8_t> m_data;
     int                  m_pos;
-
-    bool m_nopulse     = false;
-    bool m_nofilter    = false;
-    bool m_noinstrvib  = false;
-    bool m_fixedparams = false;
-    bool m_nowavedelay = false;
+    int                  m_song_count;
+    int                  m_addr_offset;
+    const char*          m_sid_filename;
+    const char*          m_sng_filename;
 };
 
 
-
-bool Sid2Song::run(const char* filename) {
-
-//    m_noinstrvib  = true;
-//    m_nowavedelay = true;
-
-
-    std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
+bool Sid2Song::load_sid() {
+    std::ifstream ifs(m_sid_filename, std::ios::binary | std::ios::ate);
     if (!ifs.is_open()) {
         printf("ERROR: could not open file\n");
         return false;
@@ -121,8 +123,17 @@ bool Sid2Song::run(const char* filename) {
     memcpy(m_song.authorname, h.song_author, sizeof(h.song_author));
     memcpy(m_song.copyrightname, h.song_released, sizeof(h.song_released));
 
+    m_song_count  = h.song_count;
+    m_addr_offset = h.offset - h.load_addr + 2;
 
-    // frequency table
+    return true;
+}
+
+
+bool Sid2Song::run() {
+
+    if (!load_sid()) return false;
+
     // find end of freq table
     uint8_t const FREQ_HI[] = "\x08\x09\x09\x0a\x0a\x0b\x0c\x0d\x0d\x0e\x0f\x10\x11\x12\x13\x14"
                               "\x15\x17\x18\x1a\x1b\x1d\x1f\x20\x22\x24\x27\x29\x2b\x2e\x31\x34"
@@ -147,13 +158,13 @@ bool Sid2Song::run(const char* filename) {
 
     // skip to song order list
     int patt_table_pos = m_pos;
-    int song_order_list_pos = h.offset + 2 + (addr - h.load_addr);
+    int song_order_list_pos = m_addr_offset + addr;
     m_pos = song_order_list_pos;
 
 
     // song order list
     int patt_count = 0;
-    for (int i = 0; i < h.song_count; ++i) {
+    for (int i = 0; i < m_song_count; ++i) {
         printf("SONG %d\n", i);
         for (int c = 0; c < 3; ++c) {
             printf(" %d:", c);
@@ -377,14 +388,21 @@ bool Sid2Song::run(const char* filename) {
         return false;
     }
 
-    return m_song.save("out.sng");
+    return m_song.save(m_sng_filename);
 }
 
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s sid-file\n", argv[0]);
+    if (argc != 2 && argc != 3) {
+        fprintf(stderr, "usage: %s sid-file [sng-file]\n", argv[0]);
         return 1;
     }
-    return Sid2Song().run(argv[1]) ? 0 : 1;
+
+    Sid2Song s(argv[1], argc == 3 ? argv[2] : "out.sng");
+
+    // TODO: disable features via args
+    //s.m_noinstrvib  = true;
+    //s.m_nowavedelay = true;
+
+    return s.run() ? 0 : 1;
 }
