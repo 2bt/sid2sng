@@ -138,7 +138,7 @@ bool Sid2Song::run() {
     uint8_t const FREQ_HI[] = "\x08\x09\x09\x0a\x0a\x0b\x0c\x0d\x0d\x0e\x0f\x10\x11\x12\x13\x14"
                               "\x15\x17\x18\x1a\x1b\x1d\x1f\x20\x22\x24\x27\x29\x2b\x2e\x31\x34"
                               "\x37\x3a\x3e\x41\x45\x49\x4e\x52\x57\x5c\x62\x68\x6e\x75\x7c\x83"
-                              "\x8b\x93\x9c\xa5\xaf\xb9\xc4\xd0\xdd\xea\xf8\xff\xe8";
+                              "\x8b\x93\x9c\xa5\xaf\xb9\xc4\xd0\xdd\xea\xf8\xff";
     uint8_t const* hi = (uint8_t const*) memmem(m_data.data(), m_data.size(), FREQ_HI, 12);
     if (!hi) {
         printf("ERROR: no freq table\n");
@@ -146,7 +146,6 @@ bool Sid2Song::run() {
     }
     for (int i = 0; FREQ_HI[i] && *hi == FREQ_HI[i]; ++i) ++hi;
     m_pos = hi - m_data.data();
-
 
     // song table
     int addr = read();
