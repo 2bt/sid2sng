@@ -6,7 +6,7 @@ Note: sid files need to have been generated via GoatTracker2.
 
 ## Usage
 
-    usage: ./build/sid2sng [options...] sid-file [sng-file]
+    usage: ./sid2sng [options...] sid-file [sng-file]
      -nopulse
      -nofilter
      -noinstrvib
