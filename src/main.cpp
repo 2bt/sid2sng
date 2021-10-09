@@ -97,19 +97,19 @@ bool Sid2Song::load_sid() {
     printf("SID\n");
     printf(" magic:       %.4s\n", h.magic);
     printf(" version:     %d\n", h.version);
-    printf(" offset:      %04x\n", h.offset);
-    printf(" load addr:   %04x\n", h.load_addr);
-    printf(" init addr:   %04x\n", h.init_addr);
-    printf(" play addr:   %04x\n", h.play_addr);
+    printf(" offset:      %04X\n", h.offset);
+    printf(" load addr:   %04X\n", h.load_addr);
+    printf(" init addr:   %04X\n", h.init_addr);
+    printf(" play addr:   %04X\n", h.play_addr);
     printf(" song count:  %d\n", h.song_count);
     printf(" start song:  %d\n", h.start_song);
-    printf(" speed:       %08x\n", h.speed);
+    printf(" speed:       %08X\n", h.speed);
     printf(" song name:   %.32s\n", h.song_name);
     printf(" song author: %.32s\n", h.song_author);
     printf(" copyright:   %.32s\n", h.song_released);
     if (h.version > 1) {
         h.flags = swap(h.flags);
-        printf(" flags:       %04x\n", h.flags);
+        printf(" flags:       %04X\n", h.flags);
         printf(" start page:  %d\n", h.start_page);
         printf(" page length: %d\n", h.page_length);
         printf(" sid 2 addr:  %d\n", h.sid_addr_2);
@@ -128,6 +128,14 @@ bool Sid2Song::load_sid() {
 }
 
 
+uint8_t const* find_mem(uint8_t const* haystack, int haystack_len, uint8_t const* needle, int needle_len) {
+    for (uint8_t const* h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
+        if (memcmp(h, needle, needle_len) == 0) return h;
+    }
+    return nullptr;
+}
+
+
 bool Sid2Song::run() {
 
     if (!load_sid()) return false;
@@ -137,7 +145,7 @@ bool Sid2Song::run() {
                               "\x15\x17\x18\x1a\x1b\x1d\x1f\x20\x22\x24\x27\x29\x2b\x2e\x31\x34"
                               "\x37\x3a\x3e\x41\x45\x49\x4e\x52\x57\x5c\x62\x68\x6e\x75\x7c\x83"
                               "\x8b\x93\x9c\xa5\xaf\xb9\xc4\xd0\xdd\xea\xf8\xff";
-    uint8_t const* hi = (uint8_t const*) memmem(m_data.data(), m_data.size(), FREQ_HI, 12);
+    uint8_t const* hi = find_mem(m_data.data(), m_data.size(), FREQ_HI, 12);
     if (!hi) {
         printf("ERROR: no freq table\n");
         return false;
@@ -172,7 +180,7 @@ bool Sid2Song::run() {
                 if (x < gt::REPEAT) {
                     m_song.songorder[i][c][p++] = x;
                     patt_count = std::max(x + 1, patt_count);
-                    printf(" %02x", x);
+                    printf(" %02X", x);
                 }
                 else if (x < gt::TRANSDOWN) {
                     // repeat
@@ -180,20 +188,20 @@ bool Sid2Song::run() {
                     m_song.songorder[i][c][p    ] = m_song.songorder[i][c][p - 1];
                     m_song.songorder[i][c][p - 1] = x;
                     ++p;
-                    printf(" R%x", x - gt::REPEAT + 1);
+                    printf(" R%X", x - gt::REPEAT + 1);
                 }
                 else {
                     // transpose
                     m_song.songorder[i][c][p++] = x;
                     int q = x - gt::TRANSUP;
-                    printf(" %c%x", "+-"[q < 0], abs(q));
+                    printf(" %c%X", "+-"[q < 0], abs(q));
                 }
             }
             // pattern end
             int x = read();
             m_song.songorder[i][c][p++] = 0xff;
             m_song.songorder[i][c][p++] = x;
-            printf(" RST%02x\n", x);
+            printf(" RST%02X\n", x);
         }
     }
 
@@ -203,7 +211,7 @@ bool Sid2Song::run() {
     int max_table[4] = {};
 
     for (int i = 0; m_pos < (int) m_data.size(); i++) {
-        printf("PATTERN %02x\n", i);
+        printf("PATTERN %02X\n", i);
 
         int prev_instr = 0;
         int instr      = 0;
@@ -256,7 +264,7 @@ bool Sid2Song::run() {
                 m_song.pattern[i][row_nr * 4 + 2] = cmd;
                 m_song.pattern[i][row_nr * 4 + 3] = arg;
 
-                printf(" %02x: ", row_nr++);
+                printf(" %02X: ", row_nr++);
                 if      (note == gt::REST)   printf("...");
                 else if (note == gt::KEYOFF) printf("===");
                 else if (note == gt::KEYON)  printf("+++");
@@ -264,7 +272,7 @@ bool Sid2Song::run() {
                             "CCDDEFFGGAAB"[note % 12],
                             "-#-#--#-#-#-"[note % 12],
                             (note - gt::FIRSTNOTE) / 12);
-                printf(" %02x%x%02x\n", instr != prev_instr ? instr : 0, cmd, arg);
+                printf(" %02X%X%02X\n", instr != prev_instr ? instr : 0, cmd, arg);
             }
 
             if (peek() == 0) break;
@@ -374,7 +382,7 @@ bool Sid2Song::run() {
                 }
             }
 
-            printf(" %02x: %02x %02x\n", i + 1, m_song.ltable[t][i], m_song.rtable[t][i]);
+            printf(" %02X: %02X %02X\n", i + 1, m_song.ltable[t][i], m_song.rtable[t][i]);
         }
     }
 
