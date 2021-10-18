@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 project(sid2sng)
-add_compile_options(-Wall -O3)
 
+if (!MSVC)
+    add_compile_options(-Wall -O3)
+endif()
 
 add_executable(${PROJECT_NAME}
     src/gsong.cpp

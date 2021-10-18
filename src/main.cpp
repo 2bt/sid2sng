@@ -5,6 +5,16 @@
 #include "gsong.hpp"
 
 
+#ifdef _MSC_VER
+uint16_t swap(uint16_t v) { return  _byteswap_ushort(v); }
+uint32_t swap(uint32_t v) { return  _byteswap_ulong(v); }
+#else
+uint16_t swap(uint16_t v) { return  __builtin_bswap16(v); }
+uint32_t swap(uint32_t v) { return  __builtin_bswap32(v); }
+#endif
+
+
+#pragma pack(push, 1)
 struct SidHeader {
     uint8_t  magic[4];
     uint16_t version;
@@ -23,11 +33,8 @@ struct SidHeader {
     uint8_t  page_length;
     uint8_t  sid_addr_2;
     uint8_t  sid_addr_3;
-} __attribute__((packed));
-
-
-uint32_t swap(uint16_t v) { return  __builtin_bswap16(v); }
-uint32_t swap(uint32_t v) { return  __builtin_bswap32(v); }
+};
+#pragma pack(pop)
 
 
 class Sid2Song {
