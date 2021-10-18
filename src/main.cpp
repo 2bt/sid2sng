@@ -2,6 +2,7 @@
 #include <cstring>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include "gsong.hpp"
 
 
