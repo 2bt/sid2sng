@@ -257,7 +257,7 @@ bool Sid2Song::run() {
                     // inc tempo
                     if (cmd == 0xf && arg >=2) ++arg;
 
-                    if (cmd >= 0x1 && cmd <= 0x4 || cmd == 0xe) {
+                    if ((cmd >= 0x1 && cmd <= 0x4) || cmd == 0xe) {
                         max_table[gt::STBL] = std::max(max_table[gt::STBL], arg);
                     }
                     if (cmd >= 0x8 && cmd <= 0xa) {
@@ -361,6 +361,7 @@ bool Sid2Song::run() {
             }
         }
         if (t == gt::STBL) {
+            // keep reading until we find a zero
             while (peek() != 0) {
                 m_song.ltable[t][max_table[t]] = read();
                 ++max_table[t];
@@ -395,7 +396,7 @@ bool Sid2Song::run() {
             }
             if (t == gt::STBL) {
                 uint8_t x = m_song.ltable[t][i];
-                if (x >= 0xf1 && x <= 0xf4 || x == 0xfe) {
+                if ((x >= 0xf1 && x <= 0xf4) || x == 0xfe) {
                     max_table[gt::STBL] = std::max<int>(max_table[gt::STBL], m_song.rtable[t][i]);
                 }
             }
