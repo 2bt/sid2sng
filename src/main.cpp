@@ -162,23 +162,28 @@ bool Sid2Song::run() {
     m_pos = hi - m_data.data();
 
     // song table
-    int addr = read();
-    read();
-    read();
-    addr |= read() << 8;
-    read();
-    read();
+    std::vector<int> song_order_list_pos(m_song_count);
+    for (int& addr : song_order_list_pos) {
+        addr = read();
+        read();
+        read();
+    }
+    for (int& addr : song_order_list_pos) {
+        addr |= read() << 8;
+        addr += m_addr_offset;
+        read();
+        read();
+    }
 
-    // skip to song order list
     int patt_table_pos = m_pos;
-    int song_order_list_pos = m_addr_offset + addr;
-    m_pos = song_order_list_pos;
-
 
     // song order list
     int patt_count = 0;
     for (int i = 0; i < m_song_count; ++i) {
         printf("SONG %d\n", i);
+
+        m_pos = song_order_list_pos[i];
+
         for (int c = 0; c < 3; ++c) {
             printf(" %d:", c);
             int p = 0;
@@ -341,8 +346,7 @@ bool Sid2Song::run() {
         if (t == gt::PTBL && m_nopulse) continue;
         if (t == gt::FTBL && m_nofilter) continue;
         // TODO: maybe skip speed table
-
-        printf("TABLE %d\n", t);
+        printf("TABLE %d (min len %d)\n", t, max_table[t]);
         if (t == gt::STBL) {
             int x = read();
             if (x != 0) {
@@ -407,9 +411,11 @@ bool Sid2Song::run() {
 
 
     // sanity check
-    if (m_pos != song_order_list_pos) {
-        printf("ERROR: tables\n");
-        return false;
+    if (m_pos > song_order_list_pos[0]) {
+        printf("WARNING: read tables past order list (%d > %d)\n", m_pos, song_order_list_pos[0]);
+    }
+    if (m_pos < song_order_list_pos[0]) {
+        printf("WARNING: not all table data was read (%d < %d)\n", m_pos, song_order_list_pos[0]);
     }
 
     return m_song.save(m_sng_filename);
