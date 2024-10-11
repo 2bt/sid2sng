@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
+#include <string>
 #include <vector>
-#include <algorithm>
 #include "gsong.hpp"
 
 
@@ -44,7 +46,7 @@ public:
     bool run();
 
     const char* m_sid_filename = nullptr;
-    const char* m_sng_filename = "out.sng";
+    const char* m_sng_filename = nullptr;
     bool        m_nopulse      = false;
     bool        m_nofilter     = false;
     bool        m_noinstrvib   = false;
@@ -418,7 +420,9 @@ bool Sid2Song::run() {
         printf("WARNING: not all table data was read (%d < %d)\n", m_pos, song_order_list_pos[0]);
     }
 
-    return m_song.save(m_sng_filename);
+    std::string name = m_sng_filename ? m_sng_filename
+                                      : std::filesystem::path(m_sid_filename).stem().string() + ".sng";
+    return m_song.save(name.c_str());
 }
 
 
