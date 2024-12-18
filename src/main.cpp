@@ -257,27 +257,29 @@ bool Sid2Song::run() {
                     note = x;
                 }
                 else {
-                    cmd  = x % 16;
+                    cmd  = x & 0xf;
                     arg  = cmd ? read() : 0;
                     note = x < gt::FXONLY ? read() : gt::REST;
 
                     // inc tempo
-                    if (cmd == 0xf && arg >=2) ++arg;
+                    if (cmd == gt::CMD_SETTEMPO && (arg & 0x7f) >= 2) ++arg;
 
-                    if ((cmd >= 0x1 && cmd <= 0x4) || cmd == 0xe) {
+                    if ((cmd >= gt::CMD_PORTAUP && cmd <= gt::CMD_VIBRATO) || cmd == 0xe) {
                         max_table[gt::STBL] = std::max(max_table[gt::STBL], arg);
                     }
-                    if (cmd >= 0x8 && cmd <= 0xa) {
-                        max_table[cmd - 0x8] = std::max(max_table[cmd - 0x8], arg);
+                    if (cmd >= gt::CMD_SETWAVEPTR && cmd <= gt::CMD_SETFILTERPTR) {
+                        int t = cmd - gt::CMD_SETWAVEPTR;
+                        max_table[t] = std::max(max_table[t], arg);
                     }
                 }
             }
 
             while (repeat--) {
-                m_song.pattern[i][row_nr * 4 + 0] = note;
-                m_song.pattern[i][row_nr * 4 + 1] = instr != prev_instr ? instr : 0;
-                m_song.pattern[i][row_nr * 4 + 2] = cmd;
-                m_song.pattern[i][row_nr * 4 + 3] = arg;
+                uint8_t* row = &m_song.pattern[i][row_nr * 4];
+                row[0] = note;
+                row[1] = instr != prev_instr ? instr : 0;
+                row[2] = cmd;
+                row[3] = arg;
 
                 printf(" %02X: ", row_nr++);
                 if      (note == gt::REST)   printf("...");
